@@ -1,0 +1,29 @@
+[package]
+name = "forker"
+version = "0.0.0"
+edition = "2021"
+license = "CAL-1.0"
+description = "Rain Interpreter Parser Rust Crate."
+homepage = "https://github.com/rainlanguage/rain.interpreter"
+repository = "https://github.com/rainlanguage/rain.interpreter"
+
+
+[lib]
+name = "forker"
+crate-type = ["rlib"]
+
+
+[dependencies]
+revm = { version = "3", default-features = false, features = [
+  "std",
+  "serde",
+  "memory_limit",
+  "optional_eip3607",
+  "optional_block_gas_limit",
+  "optional_no_base_fee"
+] }
+ethers = { git = "https://github.com/gakonst/ethers-rs" }
+foundry-config = { git = "https://github.com/foundry-rs/foundry", rev = "12ea9f6" }
+foundry-evm = { git = "https://github.com/foundry-rs/foundry", rev = "12ea9f6" }
+
+eyre = "0.6"
