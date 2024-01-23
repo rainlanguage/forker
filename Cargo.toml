@@ -22,7 +22,7 @@ revm = { version = "3", default-features = false, features = [
   "optional_block_gas_limit",
   "optional_no_base_fee"
 ] }
-ethers = { git = "https://github.com/gakonst/ethers-rs" }
+ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "df165b84" }
 foundry-config = { git = "https://github.com/foundry-rs/foundry", rev = "12ea9f6" }
 foundry-evm = { git = "https://github.com/foundry-rs/foundry", rev = "12ea9f6" }
 
