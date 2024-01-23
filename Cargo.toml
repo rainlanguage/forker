@@ -15,8 +15,8 @@ crate-type = ["rlib"]
 
 [dependencies]
 eyre = "0.6"
-foundry-evm = { git = "https://github.com/foundry-rs/foundry", rev = "12ea9f6" }
-foundry-config = { git = "https://github.com/foundry-rs/foundry", rev = "12ea9f6" }
+foundry-evm = { git = "https://github.com/foundry-rs/foundry", rev = "e6574c9f" }
+foundry-config = { git = "https://github.com/foundry-rs/foundry", rev = "e6574c9f" }
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "b730b74a1c8d142d334aef71c949248139dd0d47", default-features = false }
 revm = { version = "3", default-features = false, features = [
   "std",

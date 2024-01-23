@@ -1466,7 +1466,7 @@ dependencies = [
 [[package]]
 name = "foundry-abi"
 version = "0.1.0"
-source = "git+https://github.com/foundry-rs/foundry?rev=12ea9f6#12ea9f61a344087989f884d2ab735893c77ea576"
+source = "git+https://github.com/foundry-rs/foundry?rev=e6574c9f#e6574c9f08c37a9b5043ae654cfa109867bdbc6d"
 dependencies = [
  "ethers-contract 2.0.7 (git+https://github.com/gakonst/ethers-rs)",
  "ethers-contract-abigen 2.0.7 (git+https://github.com/gakonst/ethers-rs)",
@@ -1480,7 +1480,7 @@ dependencies = [
 [[package]]
 name = "foundry-common"
 version = "0.1.0"
-source = "git+https://github.com/foundry-rs/foundry?rev=12ea9f6#12ea9f61a344087989f884d2ab735893c77ea576"
+source = "git+https://github.com/foundry-rs/foundry?rev=e6574c9f#e6574c9f08c37a9b5043ae654cfa109867bdbc6d"
 dependencies = [
  "clap",
  "comfy-table",
@@ -1510,7 +1510,7 @@ dependencies = [
 [[package]]
 name = "foundry-config"
 version = "0.2.0"
-source = "git+https://github.com/foundry-rs/foundry?rev=12ea9f6#12ea9f61a344087989f884d2ab735893c77ea576"
+source = "git+https://github.com/foundry-rs/foundry?rev=e6574c9f#e6574c9f08c37a9b5043ae654cfa109867bdbc6d"
 dependencies = [
  "Inflector",
  "dirs-next",
@@ -1540,7 +1540,7 @@ dependencies = [
 [[package]]
 name = "foundry-evm"
 version = "0.2.0"
-source = "git+https://github.com/foundry-rs/foundry?rev=12ea9f6#12ea9f61a344087989f884d2ab735893c77ea576"
+source = "git+https://github.com/foundry-rs/foundry?rev=e6574c9f#e6574c9f08c37a9b5043ae654cfa109867bdbc6d"
 dependencies = [
  "auto_impl",
  "bytes",
@@ -1574,7 +1574,7 @@ dependencies = [
 [[package]]
 name = "foundry-macros"
 version = "0.1.0"
-source = "git+https://github.com/foundry-rs/foundry?rev=12ea9f6#12ea9f61a344087989f884d2ab735893c77ea576"
+source = "git+https://github.com/foundry-rs/foundry?rev=e6574c9f#e6574c9f08c37a9b5043ae654cfa109867bdbc6d"
 dependencies = [
  "ethers-core 2.0.7 (git+https://github.com/gakonst/ethers-rs)",
  "foundry-macros-impl",
@@ -1585,7 +1585,7 @@ dependencies = [
 [[package]]
 name = "foundry-macros-impl"
 version = "0.0.0"
-source = "git+https://github.com/foundry-rs/foundry?rev=12ea9f6#12ea9f61a344087989f884d2ab735893c77ea576"
+source = "git+https://github.com/foundry-rs/foundry?rev=e6574c9f#e6574c9f08c37a9b5043ae654cfa109867bdbc6d"
 dependencies = [
  "proc-macro2",
  "quote",
