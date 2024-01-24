@@ -1,10 +1,5 @@
-use foundry_evm::executor::RawCallResult;
-use foundry_evm::executor::{fork::CreateFork, Executor};
-use foundry_evm::executor::{opts::EvmOpts, Backend, ExecutorBuilder};
-use revm::primitives::Bytes;
-use revm::primitives::Env;
-use revm::primitives::U256;
-use revm::primitives::Address;
+use revm::primitives::{Bytes, Env, U256, Address};
+use foundry_evm::executor::{opts::EvmOpts, fork::CreateFork, RawCallResult, Executor, Backend, ExecutorBuilder};
 
 pub struct ForkedEvm {
     pub executor: Executor,
@@ -27,7 +22,6 @@ impl ForkedEvm {
                 gas_limit: u64::MAX,
                 ..Default::default()
             },
-            memory_limit: foundry_config::Config::default().memory_limit,
             ..Default::default()
         };
 
