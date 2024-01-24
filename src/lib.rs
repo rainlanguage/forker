@@ -17,8 +17,9 @@ impl ForkedEvm {
             env: foundry_evm::executor::opts::Env {
                 chain_id: None,
                 code_size_limit: None,
-                // gas_price: Some(0),
-                // gas_limit: u64::MAX,
+                block_base_fee_per_gas: 100,
+                gas_price: Some(100),
+                gas_limit: u64::MAX,
                 ..Default::default()
             },
             ..Default::default()
