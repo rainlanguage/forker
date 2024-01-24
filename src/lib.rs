@@ -1,5 +1,9 @@
-pub use revm::primitives::*;
-pub use foundry_evm::executor::{opts::EvmOpts, fork::CreateFork, RawCallResult, Executor, Backend, ExecutorBuilder};
+use revm::primitives::{Address, Bytes, Env, TransactTo};
+use foundry_evm::executor::{opts::EvmOpts, fork::CreateFork, RawCallResult, Executor, Backend, ExecutorBuilder};
+
+// re-export
+pub use revm;
+pub use foundry_evm;
 
 pub struct ForkedEvm {
     pub executor: Executor,
@@ -18,8 +22,7 @@ impl ForkedEvm {
             env: foundry_evm::executor::opts::Env {
                 chain_id: None,
                 code_size_limit: None,
-                block_base_fee_per_gas: 100,
-                gas_price: Some(100),
+                // gas_price: Some(100),
                 gas_limit: u64::MAX,
                 ..Default::default()
             },
@@ -47,16 +50,20 @@ impl ForkedEvm {
         Self { executor }
     }
 
-    pub fn call_raw(
+    pub fn call(
         &mut self,
         from: Address,
         to: Address,
         calldata: Bytes,
-        value: U256,
     ) -> eyre::Result<RawCallResult> {
-        let ethers_from = from.to_fixed_bytes().into();
-        let ethers_to = to.to_fixed_bytes().into();
-        let ethers_value = ethers::types::U256::from_big_endian(&value.to_be_bytes_vec());
-        self.executor.call_raw(ethers_from, ethers_to, calldata, ethers_value)
+        let mut env = Env::default();
+        env.tx.caller = from;
+        env.tx.data = calldata;
+        env.tx.transact_to = TransactTo::Call(to);
+        // evn.tx.gas_limit = gas_limit;
+        // evn.tx.gas_price = U256::from(20000);
+        // evn.tx.gas_priority_fee = Some(U256::from(20000));
+        
+        self.executor.call_raw_with_env(env)
     }
 }
