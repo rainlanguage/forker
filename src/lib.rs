@@ -1,5 +1,5 @@
-use revm::primitives::{Bytes, Env, U256, Address};
-use foundry_evm::executor::{opts::EvmOpts, fork::CreateFork, RawCallResult, Executor, Backend, ExecutorBuilder};
+pub use revm::primitives::{Bytes, Env, U256, Address};
+pub use foundry_evm::executor::{opts::EvmOpts, fork::CreateFork, RawCallResult, Executor, Backend, ExecutorBuilder};
 
 pub struct ForkedEvm {
     pub executor: Executor,
