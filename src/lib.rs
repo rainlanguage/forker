@@ -18,7 +18,7 @@ impl ForkedEvm {
                 chain_id: None,
                 code_size_limit: None,
                 gas_price: Some(0),
-                gas_limit: u64::MAX,
+                // gas_limit: u64::MAX,
                 ..Default::default()
             },
             ..Default::default()
