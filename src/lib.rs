@@ -52,14 +52,14 @@ impl ForkedEvm {
 
     pub fn call(
         &mut self,
-        from: Address,
-        to: Address,
-        calldata: Bytes,
+        from_address: &[u8],
+        to_address: &[u8],
+        calldata: &[u8],
     ) -> eyre::Result<RawCallResult> {
         let mut env = Env::default();
-        env.tx.caller = from;
-        env.tx.data = calldata;
-        env.tx.transact_to = TransactTo::Call(to);
+        env.tx.caller = Address::from_slice(from_address);
+        env.tx.data = Bytes::from(calldata.to_vec());
+        env.tx.transact_to = TransactTo::Call(Address::from_slice(to_address));
         // evn.tx.gas_limit = gas_limit;
         // evn.tx.gas_price = U256::from(20000);
         // evn.tx.gas_priority_fee = Some(U256::from(20000));
