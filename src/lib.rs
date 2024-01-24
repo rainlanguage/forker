@@ -10,6 +10,7 @@ impl ForkedEvm {
         env: Option<Env>,
         fork_url: String,
         fork_block_number: Option<u64>,
+        gas_limit: u64,
     ) -> ForkedEvm {
         let evm_opts = EvmOpts {
             fork_url: Some(fork_url.clone()),
@@ -34,7 +35,7 @@ impl ForkedEvm {
 
         let db = Backend::spawn(Some(fork_opts.clone()));
 
-        let mut builder = ExecutorBuilder::default();
+        let mut builder = ExecutorBuilder::default().with_gas_limit(gas_limit.into());
 
         if let Some(env) = env {
             builder = builder.with_config(env);
