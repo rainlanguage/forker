@@ -15,7 +15,7 @@ crate-type = ["rlib"]
 
 [dependencies]
 eyre = "0.6"
-revm = { version = "3", default-features = false, features = [
+revm = { git = "https://github.com/bluealloy/revm/", rev = "88337924f4d16ed1f5e4cde12a03d0cb755cd658", default-features = false, features = [
   "std",
   "serde",
   "memory_limit",
@@ -23,7 +23,7 @@ revm = { version = "3", default-features = false, features = [
   "optional_block_gas_limit",
   "optional_no_base_fee"
 ] }
-foundry-evm = { git = "https://github.com/rainlanguage/foundry", rev = "9ce236a2ac719f95a016f75d57395c975d7e4e7b" }
+foundry-evm = { git = "https://github.com/rainlanguage/foundry", rev = "19df53f98fa9685e6c1317d24383c443bc8f52e0" }
 ethers = { git = "https://github.com/gakonst/ethers-rs", default-features = false }
 # ethers-core = { version = "2.0.7", default-features = false }
 # ethers-contract = { version = "2.0.7", default-features = false }
@@ -37,8 +37,8 @@ tokio = { version = "1.34.0", features = ["full"] }
 
 # solang-parser = "=0.3.0"
 
-[patch.crates-io]
-revm = { git = "https://github.com/bluealloy/revm/", rev = "88337924f4d16ed1f5e4cde12a03d0cb755cd658" }
+# [patch.crates-io]
+# revm = { git = "https://github.com/bluealloy/revm/", rev = "88337924f4d16ed1f5e4cde12a03d0cb755cd658" }
 # ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "b730b74a1c8d142d334aef71c949248139dd0d47" }
 # ethers-core = { git = "https://github.com/gakonst/ethers-rs", rev = "b730b74a1c8d142d334aef71c949248139dd0d47" }
 # ethers-contract = { git = "https://github.com/gakonst/ethers-rs", rev = "b730b74a1c8d142d334aef71c949248139dd0d47" }

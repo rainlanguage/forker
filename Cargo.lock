@@ -1641,7 +1641,7 @@ dependencies = [
 [[package]]
 name = "foundry-abi"
 version = "0.1.0"
-source = "git+https://github.com/rainlanguage/foundry?rev=9ce236a2ac719f95a016f75d57395c975d7e4e7b#9ce236a2ac719f95a016f75d57395c975d7e4e7b"
+source = "git+https://github.com/rainlanguage/foundry?rev=19df53f98fa9685e6c1317d24383c443bc8f52e0#19df53f98fa9685e6c1317d24383c443bc8f52e0"
 dependencies = [
  "ethers-contract 2.0.7",
  "ethers-contract-abigen 2.0.7",
@@ -1655,7 +1655,7 @@ dependencies = [
 [[package]]
 name = "foundry-common"
 version = "0.1.0"
-source = "git+https://github.com/rainlanguage/foundry?rev=9ce236a2ac719f95a016f75d57395c975d7e4e7b#9ce236a2ac719f95a016f75d57395c975d7e4e7b"
+source = "git+https://github.com/rainlanguage/foundry?rev=19df53f98fa9685e6c1317d24383c443bc8f52e0#19df53f98fa9685e6c1317d24383c443bc8f52e0"
 dependencies = [
  "clap",
  "comfy-table",
@@ -1685,7 +1685,7 @@ dependencies = [
 [[package]]
 name = "foundry-config"
 version = "0.2.0"
-source = "git+https://github.com/rainlanguage/foundry?rev=9ce236a2ac719f95a016f75d57395c975d7e4e7b#9ce236a2ac719f95a016f75d57395c975d7e4e7b"
+source = "git+https://github.com/rainlanguage/foundry?rev=19df53f98fa9685e6c1317d24383c443bc8f52e0#19df53f98fa9685e6c1317d24383c443bc8f52e0"
 dependencies = [
  "Inflector",
  "dirs-next",
@@ -1715,7 +1715,7 @@ dependencies = [
 [[package]]
 name = "foundry-evm"
 version = "0.2.0"
-source = "git+https://github.com/rainlanguage/foundry?rev=9ce236a2ac719f95a016f75d57395c975d7e4e7b#9ce236a2ac719f95a016f75d57395c975d7e4e7b"
+source = "git+https://github.com/rainlanguage/foundry?rev=19df53f98fa9685e6c1317d24383c443bc8f52e0#19df53f98fa9685e6c1317d24383c443bc8f52e0"
 dependencies = [
  "auto_impl",
  "bytes",
@@ -1749,7 +1749,7 @@ dependencies = [
 [[package]]
 name = "foundry-macros"
 version = "0.1.0"
-source = "git+https://github.com/rainlanguage/foundry?rev=9ce236a2ac719f95a016f75d57395c975d7e4e7b#9ce236a2ac719f95a016f75d57395c975d7e4e7b"
+source = "git+https://github.com/rainlanguage/foundry?rev=19df53f98fa9685e6c1317d24383c443bc8f52e0#19df53f98fa9685e6c1317d24383c443bc8f52e0"
 dependencies = [
  "ethers-core 2.0.7",
  "foundry-macros-impl",
@@ -1760,7 +1760,7 @@ dependencies = [
 [[package]]
 name = "foundry-macros-impl"
 version = "0.0.0"
-source = "git+https://github.com/rainlanguage/foundry?rev=9ce236a2ac719f95a016f75d57395c975d7e4e7b#9ce236a2ac719f95a016f75d57395c975d7e4e7b"
+source = "git+https://github.com/rainlanguage/foundry?rev=19df53f98fa9685e6c1317d24383c443bc8f52e0#19df53f98fa9685e6c1317d24383c443bc8f52e0"
 dependencies = [
  "proc-macro2",
  "quote",
