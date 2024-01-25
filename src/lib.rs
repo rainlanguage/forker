@@ -40,17 +40,13 @@ impl ForkedEvm {
 
         let db = Backend::spawn(Some(fork_opts.clone()));
 
-        let mut builder = if let Some(gs) = gas_limit {
-            ExecutorBuilder::default().with_gas_limit(gs.into())
-        } else {
+        let builder = if let Some(gs) = gas_limit {
             ExecutorBuilder::default()
-        };
-
-        if let Some(env) = env {
-            builder = builder.with_config(env);
+                .with_gas_limit(gs.into())
+                .with_config(env.unwrap_or(fork_opts.env.clone()))
         } else {
-            builder = builder.with_config(fork_opts.env.clone());
-        }
+            ExecutorBuilder::default().with_config(env.unwrap_or(fork_opts.env.clone()))
+        };
 
         let executor = builder.build(db);
         Self { executor }
