@@ -1,9 +1,11 @@
+use foundry_evm::executor::{
+    fork::CreateFork, opts::EvmOpts, Backend, Executor, ExecutorBuilder, RawCallResult,
+};
 use revm::primitives::{Address, Bytes, Env, TransactTo};
-use foundry_evm::executor::{opts::EvmOpts, fork::CreateFork, RawCallResult, Executor, Backend, ExecutorBuilder};
 
 // re-export
-pub use revm;
 pub use foundry_evm;
+pub use revm;
 
 pub struct ForkedEvm {
     pub executor: Executor,
@@ -11,13 +13,13 @@ pub struct ForkedEvm {
 
 impl ForkedEvm {
     pub fn new(
-        env: Option<Env>,
-        fork_url: String,
+        fork_url: &str,
         fork_block_number: Option<u64>,
-        gas_limit: u64,
+        gas_limit: Option<u64>,
+        env: Option<Env>,
     ) -> ForkedEvm {
         let evm_opts = EvmOpts {
-            fork_url: Some(fork_url.clone()),
+            fork_url: Some(fork_url.to_string()),
             fork_block_number,
             env: foundry_evm::executor::opts::Env {
                 chain_id: None,
@@ -30,7 +32,7 @@ impl ForkedEvm {
         };
 
         let fork_opts = CreateFork {
-            url: fork_url,
+            url: fork_url.to_string(),
             enable_caching: true,
             env: evm_opts.evm_env_blocking().unwrap(),
             evm_opts,
@@ -38,7 +40,11 @@ impl ForkedEvm {
 
         let db = Backend::spawn(Some(fork_opts.clone()));
 
-        let mut builder = ExecutorBuilder::default().with_gas_limit(gas_limit.into());
+        let mut builder = if let Some(gs) = gas_limit {
+            ExecutorBuilder::default().with_gas_limit(gs.into())
+        } else {
+            ExecutorBuilder::default()
+        };
 
         if let Some(env) = env {
             builder = builder.with_config(env);
@@ -57,13 +63,16 @@ impl ForkedEvm {
         calldata: &[u8],
     ) -> eyre::Result<RawCallResult> {
         let mut env = Env::default();
+        if from_address.len() != 20 || to_address.len() != 20 {
+            return Err(eyre::Report::msg("invalid address!"));
+        }
         env.tx.caller = Address::from_slice(from_address);
         env.tx.data = Bytes::from(calldata.to_vec());
         env.tx.transact_to = TransactTo::Call(Address::from_slice(to_address));
         // evn.tx.gas_limit = gas_limit;
         // evn.tx.gas_price = U256::from(20000);
         // evn.tx.gas_priority_fee = Some(U256::from(20000));
-        
+
         self.executor.call_raw_with_env(env)
     }
 }

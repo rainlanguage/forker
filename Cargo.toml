@@ -3,21 +3,19 @@ name = "forker"
 version = "0.0.0"
 edition = "2021"
 license = "CAL-1.0"
-description = "Rain Interpreter Parser Rust Crate."
+description = "Tool for building foundry-backed local evm forks from RPC urls"
 homepage = "https://github.com/rainlanguage/rain.interpreter"
 repository = "https://github.com/rainlanguage/rain.interpreter"
-
 
 [lib]
 name = "forker"
 crate-type = ["rlib"]
 
-
 [dependencies]
 eyre = "0.6"
-foundry-evm = { git = "https://github.com/foundry-rs/foundry", rev = "12ea9f6" }
-ethers = { git = "https://github.com/gakonst/ethers-rs" }
-revm = { version = "3", default-features = false, features = [
+ethers = { git = "https://github.com/gakonst/ethers-rs", default-features = false }
+foundry-evm = { git = "https://github.com/rainlanguage/foundry", rev = "19df53f98fa9685e6c1317d24383c443bc8f52e0" }
+revm = { git = "https://github.com/bluealloy/revm/", rev = "88337924f4d16ed1f5e4cde12a03d0cb755cd658", default-features = false, features = [
   "std",
   "serde",
   "memory_limit",
