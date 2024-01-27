@@ -1,7 +1,10 @@
-use foundry_evm::executor::{
-    fork::CreateFork, opts::EvmOpts, Backend, Executor, ExecutorBuilder, RawCallResult,
+use foundry_evm::{
+    backend::Backend,
+    executors::{Executor, ExecutorBuilder, RawCallResult},
+    fork::CreateFork,
+    opts::EvmOpts,
 };
-use revm::primitives::{Address, Bytes, Env, TransactTo};
+use revm::primitives::{Address, Bytes, Env, TransactTo, U256};
 
 // re-export
 pub use foundry_evm;
@@ -12,7 +15,7 @@ pub struct ForkedEvm {
 }
 
 impl ForkedEvm {
-    pub fn new(
+    pub async fn new(
         fork_url: &str,
         fork_block_number: Option<u64>,
         gas_limit: Option<u64>,
@@ -21,7 +24,7 @@ impl ForkedEvm {
         let evm_opts = EvmOpts {
             fork_url: Some(fork_url.to_string()),
             fork_block_number,
-            env: foundry_evm::executor::opts::Env {
+            env: foundry_evm::opts::Env {
                 chain_id: None,
                 code_size_limit: None,
                 // gas_price: Some(100),
@@ -34,22 +37,22 @@ impl ForkedEvm {
         let fork_opts = CreateFork {
             url: fork_url.to_string(),
             enable_caching: true,
-            env: evm_opts.evm_env_blocking().unwrap(),
+            env: evm_opts.fork_evm_env(fork_url).await.unwrap().0,
             evm_opts,
         };
 
-        let db = Backend::spawn(Some(fork_opts.clone()));
+        let db = Backend::spawn(Some(fork_opts.clone())).await;
+        // new(MultiFork::spawn().await, Some(fork_opts.clone()));
 
-        let builder = if let Some(gs) = gas_limit {
-            ExecutorBuilder::default()
-                .with_gas_limit(gs.into())
-                .with_config(env.unwrap_or(fork_opts.env.clone()))
+        let builder = if let Some(gas) = gas_limit {
+            ExecutorBuilder::default().gas_limit(U256::from(gas))
         } else {
-            ExecutorBuilder::default().with_config(env.unwrap_or(fork_opts.env.clone()))
+            ExecutorBuilder::default()
         };
 
-        let executor = builder.build(db);
-        Self { executor }
+        Self {
+            executor: builder.build(env.unwrap_or(fork_opts.env.clone()), db),
+        }
     }
 
     pub fn call(
@@ -58,16 +61,16 @@ impl ForkedEvm {
         to_address: &[u8],
         calldata: &[u8],
     ) -> eyre::Result<RawCallResult> {
-        let mut env = Env::default();
         if from_address.len() != 20 || to_address.len() != 20 {
             return Err(eyre::Report::msg("invalid address!"));
         }
+        let mut env = Env::default();
         env.tx.caller = Address::from_slice(from_address);
         env.tx.data = Bytes::from(calldata.to_vec());
         env.tx.transact_to = TransactTo::Call(Address::from_slice(to_address));
-        // evn.tx.gas_limit = gas_limit;
-        // evn.tx.gas_price = U256::from(20000);
-        // evn.tx.gas_priority_fee = Some(U256::from(20000));
+        // env.tx.gas_limit = 1000;
+        // env.tx.gas_price = U256::from(20000);
+        // env.tx.gas_priority_fee = Some(U256::from(20000));
 
         self.executor.call_raw_with_env(env)
     }
