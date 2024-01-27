@@ -2,6 +2,7 @@
 name = "forker"
 version = "0.0.0"
 edition = "2021"
+
 license = "CAL-1.0"
 description = "Tool for building foundry-backed local evm forks from RPC urls"
 homepage = "https://github.com/rainlanguage/rain.interpreter"
@@ -13,13 +14,32 @@ crate-type = ["rlib"]
 
 [dependencies]
 eyre = "0.6"
-ethers = { git = "https://github.com/gakonst/ethers-rs", default-features = false }
-foundry-evm = { git = "https://github.com/rainlanguage/foundry", rev = "19df53f98fa9685e6c1317d24383c443bc8f52e0" }
-revm = { git = "https://github.com/bluealloy/revm/", rev = "88337924f4d16ed1f5e4cde12a03d0cb755cd658", default-features = false, features = [
-  "std",
-  "serde",
-  "memory_limit",
-  "optional_eip3607",
-  "optional_block_gas_limit",
-  "optional_no_base_fee"
+ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107", default-features = false }
+foundry-evm = { git = "https://github.com/foundry-rs/foundry", rev = "deb3116955eea4333f9e4e4516104be4182e9ee2" }
+revm = { version = "3", default-features = false, features = [
+    "std",
+    "serde",
+    "memory_limit",
+    "optional_eip3607",
+    "optional_block_gas_limit",
+    "optional_no_base_fee",
+    "arbitrary",
 ] }
+foundry-compilers = "=0.2.2"
+
+[patch.crates-io]
+ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107" }
+ethers-core = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107" }
+ethers-contract = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107" }
+ethers-contract-abigen = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107" }
+ethers-providers = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107" }
+ethers-signers = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107" }
+ethers-middleware = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107" }
+ethers-solc = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107" }
+
+revm = { git = "https://github.com/bluealloy/revm", branch = "reth_freeze" }
+revm-primitives = { git = "https://github.com/bluealloy/revm", branch = "reth_freeze" }
+revm-interpreter = { git = "https://github.com/bluealloy/revm", branch = "reth_freeze" }
+revm-precompile = { git = "https://github.com/bluealloy/revm", branch = "reth_freeze" }
+
+revm-inspectors = { git = "https://github.com/paradigmxyz/evm-inspectors" }
