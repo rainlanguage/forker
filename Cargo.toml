@@ -15,7 +15,7 @@ crate-type = ["rlib"]
 [dependencies]
 eyre = "0.6"
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107", default-features = false }
-foundry-evm = { git = "https://github.com/foundry-rs/foundry", rev = "deb3116955eea4333f9e4e4516104be4182e9ee2" }
+foundry-evm = { git = "https://github.com/foundry-rs/foundry", rev = "a5efe4f8f425e2f6fb35b0e298f0f46acce11dad" }
 revm = { version = "3", default-features = false, features = [
     "std",
     "serde",
@@ -25,7 +25,8 @@ revm = { version = "3", default-features = false, features = [
     "optional_no_base_fee",
     "arbitrary",
 ] }
-foundry-compilers = "=0.2.2"
+
+k256 = "=0.13.1"
 
 [patch.crates-io]
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107" }
@@ -42,4 +43,4 @@ revm-primitives = { git = "https://github.com/bluealloy/revm", branch = "reth_fr
 revm-interpreter = { git = "https://github.com/bluealloy/revm", branch = "reth_freeze" }
 revm-precompile = { git = "https://github.com/bluealloy/revm", branch = "reth_freeze" }
 
-revm-inspectors = { git = "https://github.com/paradigmxyz/evm-inspectors" }
+# revm-inspectors = { git = "https://github.com/paradigmxyz/evm-inspectors" }
