@@ -265,22 +265,35 @@ impl From<eyre::Report> for ForkCallError {
 
 #[cfg(test)]
 mod tests {
-    use crate::namespace::CreateNamespace;
+    // use crate::namespace::CreateNamespace;
     use super::*;
     use alloy_primitives::U256;
-    use rain_interpreter_bindings::{
-        DeployerISP::iParserCall,
-        IInterpreterStoreV1::{getCall, setCall},
-    };
+    use alloy_sol_types::sol;
+    // use rain_interpreter_bindings::{
+    //     DeployerISP::iParserCall,
+    //     IInterpreterStoreV1::{getCall, setCall},
+    // };
+
+    sol! {
+        interface IERC20 {
+            function balanceOf(address account) external view returns (uint256);
+            function transfer(address to, uint256 amount) external returns (bool);
+            function allowance(address owner, address spender) external view returns (uint256);
+            function approve(address spender, uint256 amount) external returns (bool);
+            function transferFrom(address from, address to, uint256 amount) external returns (bool);
+        }
+    }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_forked_evm_read() {
         let fork_url = "https://rpc.ankr.com/polygon_mumbai";
-        let fork_block_number: BlockNumber = 45658085;
-        let forked_evm = ForkedEvm::new(NewForkedEvm {
-            fork_url: fork_url.into(),
-            fork_block_number: Some(fork_block_number),
-        })
+        let fork_block_number = 45658085u64;
+        let forked_evm = Forker::new(
+            fork_url.into(),
+            Some(fork_block_number),
+            None,
+            None,
+        )
         .await;
 
         let from_address = Address::default();
@@ -301,13 +314,15 @@ mod tests {
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
     async fn test_forked_evm_write() {
         let fork_url = "https://rpc.ankr.com/polygon_mumbai";
-        let fork_block_number: BlockNumber = 45658085;
-        let forked_evm = ForkedEvm::new(NewForkedEvm {
-            fork_url: fork_url.into(),
-            fork_block_number: Some(fork_block_number),
-        })
+        let fork_block_number = 45658085u64;
+        let forked_evm = Forker::new(
+            fork_url.into(),
+            Some(fork_block_number),
+            None,
+            None
+        )
         .await;
-        let mut executor = forked_evm.build_executor();
+        // let mut executor = forked_evm.build_executor();
         let from_address = Address::repeat_byte(0x02);
         let to_address: Address = "0xF34e1f2BCeC2baD9c7bE8Aec359691839B784861"
             .parse::<Address>()
@@ -317,7 +332,6 @@ mod tests {
         let value = U256::from(4);
         let _set = forked_evm
             .write(
-                Some(&mut executor),
                 from_address,
                 to_address,
                 setCall {
