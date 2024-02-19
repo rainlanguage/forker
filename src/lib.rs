@@ -366,7 +366,7 @@ mod tests {
         let result = forker.alloy_read(from_address, to_address, call).unwrap();
         let new_balance = result.1._0;
         assert_eq!(new_balance, old_balance - send_amount);
-        let ploygon_balance = new_balance;
+        let polygon_balance = new_balance;
 
         // switch fork
         forker
@@ -413,7 +413,7 @@ mod tests {
         };
         let result = forker.alloy_read(from_address, to_address, call).unwrap();
         let balance = result.1._0;
-        assert_eq!(balance, ploygon_balance);
+        assert_eq!(balance, polygon_balance);
 
         Ok(())
     }
