@@ -60,7 +60,7 @@ impl Forker {
         };
 
         let mut forks_map = HashMap::new();
-        forks_map.insert(fork_id, U256::from(1));
+        forks_map.insert(fork_id, U256::from(0));
         Self {
             executor: builder.build(env.unwrap_or(create_fork.env.clone()), db),
             forks: forks_map,
@@ -109,6 +109,7 @@ impl Forker {
                 env: evm_opts.fork_evm_env(fork_url).await.unwrap().0,
                 evm_opts,
             };
+            self.forks.insert(fork_id, U256::from(self.forks.len()));
             let default_env = create_fork.env.clone();
             self.executor
                 .backend
@@ -193,9 +194,7 @@ impl Forker {
         env.tx.data = Bytes::from(call.abi_encode());
         env.tx.transact_to = TransactTo::Call(to_address.0 .0.into());
 
-        let raw = self
-            .executor
-            .call_raw_with_env(env)?;
+        let raw = self.executor.call_raw_with_env(env)?;
 
         let typed_return =
             T::abi_decode_returns(raw.result.to_vec().as_slice(), true).map_err(|e| {
@@ -206,7 +205,7 @@ impl Forker {
                     raw
                 ))
             })?;
-        Ok(( raw, typed_return ))
+        Ok((raw, typed_return))
     }
 
     /// Writes to the forked EVM using alloy typed arguments.
@@ -224,23 +223,20 @@ impl Forker {
         call: T,
         value: U256,
     ) -> Result<(RawCallResult, T::Return), ForkCallError> {
-        let raw = self
-            .executor
-            .call_raw_committing(
-                from_address.0 .0.into(),
-                to_address.0 .0.into(),
-                Bytes::from(call.abi_encode()),
-                value,
-            )?;
+        let raw = self.executor.call_raw_committing(
+            from_address.0 .0.into(),
+            to_address.0 .0.into(),
+            Bytes::from(call.abi_encode()),
+            value,
+        )?;
 
         let typed_return =
             T::abi_decode_returns(raw.result.to_vec().as_slice(), true).map_err(|e| {
                 ForkCallError::TypedError(format!("Call:{:?} Error:{:?}", type_name::<T>(), e))
             })?;
-        Ok(( raw, typed_return ))
+        Ok((raw, typed_return))
     }
 }
-
 
 #[derive(Debug)]
 pub enum ForkCallError {
@@ -265,14 +261,9 @@ impl From<eyre::Report> for ForkCallError {
 
 #[cfg(test)]
 mod tests {
-    // use crate::namespace::CreateNamespace;
     use super::*;
     use alloy_primitives::U256;
     use alloy_sol_types::sol;
-    // use rain_interpreter_bindings::{
-    //     DeployerISP::iParserCall,
-    //     IInterpreterStoreV1::{getCall, setCall},
-    // };
 
     sol! {
         interface IERC20 {
@@ -283,81 +274,144 @@ mod tests {
             function transferFrom(address from, address to, uint256 amount) external returns (bool);
         }
     }
+    const USDT_POLYGON: &str = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f";
+    const USDT_BSC: &str = "0x55d398326f99059fF775485246999027B3197955";
+    const POLYGON_FORK_NUMBER: u64 = 53717900;
+    const BSC_FORK_NUMBER: u64 = 36281780;
+    const POLYGON_FORK_URL: &str = "https://rpc.ankr.com/polygon";
+    const BSC_FORK_URL: &str = "https://rpc.ankr.com/bsc";
+    const BSC_ACC: &str = "0xee5B5B923fFcE93A870B3104b7CA09c3db80047A";
+    const POLYGON_ACC: &str = "0xF977814e90dA44bFA03b6295A0616a897441aceC";
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
-    async fn test_forked_evm_read() {
-        let fork_url = "https://rpc.ankr.com/polygon_mumbai";
-        let fork_block_number = 45658085u64;
-        let forked_evm = Forker::new(
-            fork_url.into(),
-            Some(fork_block_number),
-            None,
-            None,
-        )
-        .await;
+    async fn test_forker_read() {
+        let mut forker = Forker::new(POLYGON_FORK_URL, Some(POLYGON_FORK_NUMBER), None, None).await;
 
         let from_address = Address::default();
-        let to_address: Address = "0x0754030e91F316B2d0b992fe7867291E18200A77"
-            .parse::<Address>()
-            .unwrap();
-        let call = iParserCall {};
-        let result = forked_evm
-            .read(None, from_address, to_address, call)
-            .unwrap();
-        let parser_address = result.typed_return._0;
-        let expected_address = "0x4f8024FB052DbE76b156C6C262Ad27e0F436AF98"
-            .parse::<Address>()
-            .unwrap();
-        assert_eq!(parser_address, expected_address);
+        let to_address: Address = USDT_POLYGON.parse::<Address>().unwrap();
+        let call = IERC20::balanceOfCall {
+            account: POLYGON_ACC.parse::<Address>().unwrap(),
+        };
+        let result = forker.alloy_read(from_address, to_address, call).unwrap();
+        let balance = result.1._0;
+        let expected_balance = U256::from(0x1087cc8e759f4u64);
+        assert_eq!(balance, expected_balance);
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
-    async fn test_forked_evm_write() {
-        let fork_url = "https://rpc.ankr.com/polygon_mumbai";
-        let fork_block_number = 45658085u64;
-        let forked_evm = Forker::new(
-            fork_url.into(),
-            Some(fork_block_number),
-            None,
-            None
-        )
-        .await;
-        // let mut executor = forked_evm.build_executor();
-        let from_address = Address::repeat_byte(0x02);
-        let to_address: Address = "0xF34e1f2BCeC2baD9c7bE8Aec359691839B784861"
-            .parse::<Address>()
-            .unwrap();
-        let namespace = U256::from(1);
-        let key = U256::from(3);
-        let value = U256::from(4);
-        let _set = forked_evm
-            .write(
-                from_address,
-                to_address,
-                setCall {
-                    namespace,
-                    kvs: vec![key, value],
-                },
-                U256::from(0),
-            )
+    async fn test_forker_write() {
+        let mut forker = Forker::new(POLYGON_FORK_URL, Some(POLYGON_FORK_NUMBER), None, None).await;
+
+        let from_address = Address::default();
+        let to_address: Address = USDT_POLYGON.parse::<Address>().unwrap();
+        let call = IERC20::balanceOfCall {
+            account: POLYGON_ACC.parse::<Address>().unwrap(),
+        };
+        let result = forker.alloy_read(from_address, to_address, call).unwrap();
+        let old_balance = result.1._0;
+
+        let from_address = POLYGON_ACC.parse::<Address>().unwrap();
+        let to_address: Address = USDT_POLYGON.parse::<Address>().unwrap();
+        let send_amount = U256::from(0xffffffffu64);
+        let transfer_call = IERC20::transferCall {
+            to: Address::repeat_byte(0x2),
+            amount: send_amount,
+        };
+        forker
+            .alloy_write(from_address, to_address, transfer_call, U256::from(0))
             .unwrap();
 
-        let fully_quallified_namespace =
-            CreateNamespace::qualify_namespace(namespace.into(), from_address);
+        let from_address = Address::default();
+        let to_address: Address = USDT_POLYGON.parse::<Address>().unwrap();
+        let call = IERC20::balanceOfCall {
+            account: POLYGON_ACC.parse::<Address>().unwrap(),
+        };
+        let result = forker.alloy_read(from_address, to_address, call).unwrap();
+        let new_balance = result.1._0;
 
-        let get = forked_evm
-            .read(
-                Some(&mut executor),
-                from_address,
-                to_address,
-                getCall {
-                    namespace: fully_quallified_namespace.into(),
-                    key: U256::from(3),
-                },
-            )
-            .unwrap()
-            .typed_return
-            ._0;
-        assert_eq!(value, get);
+        assert_eq!(new_balance, old_balance - send_amount);
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_multi_fork_read_write_switch() -> Result<(), eyre::Report> {
+        let mut forker = Forker::new(POLYGON_FORK_URL, Some(POLYGON_FORK_NUMBER), None, None).await;
+
+        let from_address = Address::default();
+        let to_address: Address = USDT_POLYGON.parse::<Address>().unwrap();
+        let call = IERC20::balanceOfCall {
+            account: POLYGON_ACC.parse::<Address>().unwrap(),
+        };
+        let result = forker.alloy_read(from_address, to_address, call).unwrap();
+        let old_balance = result.1._0;
+
+        let from_address = POLYGON_ACC.parse::<Address>().unwrap();
+        let to_address: Address = USDT_POLYGON.parse::<Address>().unwrap();
+        let send_amount = U256::from(0xffu64);
+        let transfer_call = IERC20::transferCall {
+            to: Address::repeat_byte(0x2),
+            amount: send_amount,
+        };
+        forker
+            .alloy_write(from_address, to_address, transfer_call, U256::from(0))
+            .unwrap();
+
+        let from_address = Address::default();
+        let to_address: Address = USDT_POLYGON.parse::<Address>().unwrap();
+        let call = IERC20::balanceOfCall {
+            account: POLYGON_ACC.parse::<Address>().unwrap(),
+        };
+        let result = forker.alloy_read(from_address, to_address, call).unwrap();
+        let new_balance = result.1._0;
+        assert_eq!(new_balance, old_balance - send_amount);
+        let ploygon_balance = new_balance;
+
+        // switch fork
+        forker
+            .add_or_select(BSC_FORK_URL, Some(BSC_FORK_NUMBER), None)
+            .await?;
+
+        let from_address = Address::default();
+        let to_address: Address = USDT_BSC.parse::<Address>().unwrap();
+        let call = IERC20::balanceOfCall {
+            account: BSC_ACC.parse::<Address>().unwrap(),
+        };
+        let result = forker.alloy_read(from_address, to_address, call).unwrap();
+        let old_balance = result.1._0;
+
+        let from_address = BSC_ACC.parse::<Address>().unwrap();
+        let to_address: Address = USDT_BSC.parse::<Address>().unwrap();
+        let send_amount = U256::from(0xffffffffu64);
+        let transfer_call = IERC20::transferCall {
+            to: Address::repeat_byte(0x2),
+            amount: send_amount,
+        };
+        forker
+            .alloy_write(from_address, to_address, transfer_call, U256::from(0))
+            .unwrap();
+
+        let from_address = Address::default();
+        let to_address: Address = USDT_BSC.parse::<Address>().unwrap();
+        let call = IERC20::balanceOfCall {
+            account: BSC_ACC.parse::<Address>().unwrap(),
+        };
+        let result = forker.alloy_read(from_address, to_address, call).unwrap();
+        let new_balance = result.1._0;
+        assert_eq!(new_balance, old_balance - send_amount);
+
+        // switch fork
+        forker
+            .add_or_select(POLYGON_FORK_URL, Some(POLYGON_FORK_NUMBER), None)
+            .await?;
+
+        let from_address = Address::default();
+        let to_address: Address = USDT_POLYGON.parse::<Address>().unwrap();
+        let call = IERC20::balanceOfCall {
+            account: POLYGON_ACC.parse::<Address>().unwrap(),
+        };
+        let result = forker.alloy_read(from_address, to_address, call).unwrap();
+        let balance = result.1._0;
+        assert_eq!(balance, ploygon_balance);
+
+        Ok(())
     }
 }
