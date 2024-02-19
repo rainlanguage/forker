@@ -26,6 +26,8 @@ revm = { version = "3", default-features = false, features = [
     "arbitrary",
 ] }
 foundry-compilers = "=0.2.2"
+alloy-sol-types = { version = "0.5.4", features = ["json"] }
+alloy-primitives = "0.5.4"
 
 [patch.crates-io]
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107" }
