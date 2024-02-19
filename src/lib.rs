@@ -10,22 +10,11 @@ use revm::{
     primitives::{Address as Addr, Bytes, Env, TransactTo, U256 as Uint256},
     JournaledState,
 };
-use std::{any::type_name, collections::HashMap};
+use std::{any::type_name, collections::HashMap, error::Error};
 
 // re-export
 pub use foundry_evm;
 pub use revm;
-
-pub struct ForkTypedReturn<T: SolCall> {
-    pub raw: RawCallResult,
-    pub typed_return: T::Return,
-}
-
-#[derive(Debug)]
-pub enum ForkCallError {
-    ExecutorError,
-    TypedError(String),
-}
 
 pub struct Forker {
     pub executor: Executor,
@@ -36,8 +25,8 @@ impl Forker {
     pub async fn new(
         fork_url: &str,
         fork_block_number: Option<u64>,
-        gas_limit: Option<u64>,
         env: Option<Env>,
+        gas_limit: Option<u64>,
     ) -> Forker {
         let fork_id = ForkId::new(fork_url, fork_block_number);
         let evm_opts = EvmOpts {
@@ -78,7 +67,8 @@ impl Forker {
         }
     }
 
-    /// adds new fork and sets it as active or if the fork already exists, selects it as active
+    /// adds new fork and sets it as active or if the fork already exists, selects it as active,
+    /// does nothing if the fork is already the active fork.
     pub async fn add_or_select(
         &mut self,
         fork_url: &str,
@@ -113,24 +103,31 @@ impl Forker {
                 memory_limit: u64::MAX,
                 ..Default::default()
             };
-
             let create_fork = CreateFork {
                 url: fork_url.to_string(),
                 enable_caching: true,
                 env: evm_opts.fork_evm_env(fork_url).await.unwrap().0,
                 evm_opts,
             };
+            let default_env = create_fork.env.clone();
             self.executor
                 .backend
                 .create_select_fork(
                     create_fork,
-                    &mut env.unwrap_or_default(),
+                    &mut env.unwrap_or(default_env),
                     &mut journaled_state,
                 )
                 .map(|_| ())
         }
     }
 
+    /// Reads from the forked EVM.
+    /// # Arguments
+    /// * `from_address` - The address to call from.
+    /// * `to_address` - The address to call to.
+    /// * `calldata` - The calldata.
+    /// # Returns
+    /// A result containing the raw call result.
     pub fn call(
         &mut self,
         from_address: &[u8],
@@ -151,6 +148,14 @@ impl Forker {
         self.executor.call_raw_with_env(env)
     }
 
+    /// Writes to the forked EVM.
+    /// # Arguments
+    /// * `from_address` - The address to call from.
+    /// * `to_address` - The address to call to.
+    /// * `calldata` - The calldata.
+    /// * `value` - The value to send with the call.
+    /// # Returns
+    /// A result containing the raw call result.
     pub fn write(
         &mut self,
         from_address: &[u8],
@@ -170,9 +175,8 @@ impl Forker {
         )
     }
 
-    /// Reads from the forked EVM.
+    /// Reads from the forked EVM using alloy typed arguments.
     /// # Arguments
-    /// * `executor` - An optional instance of `Executor`.
     /// * `from_address` - The address to call from.
     /// * `to_address` - The address to call to.
     /// * `call` - The call to make.
@@ -183,14 +187,7 @@ impl Forker {
         from_address: Address,
         to_address: Address,
         call: T,
-    ) -> Result<ForkTypedReturn<T>, ForkCallError> {
-        // let binding = self.build_executor();
-
-        // let mut executor = match executor {
-        //     Some(executor) => executor.clone(),
-        //     None => binding,
-        // };
-
+    ) -> Result<(RawCallResult, T::Return), ForkCallError> {
         let mut env = Env::default();
         env.tx.caller = from_address.0 .0.into();
         env.tx.data = Bytes::from(call.abi_encode());
@@ -198,8 +195,7 @@ impl Forker {
 
         let raw = self
             .executor
-            .call_raw_with_env(env)
-            .map_err(|_e| ForkCallError::ExecutorError)?;
+            .call_raw_with_env(env)?;
 
         let typed_return =
             T::abi_decode_returns(raw.result.to_vec().as_slice(), true).map_err(|e| {
@@ -210,12 +206,11 @@ impl Forker {
                     raw
                 ))
             })?;
-        Ok(ForkTypedReturn { raw, typed_return })
+        Ok(( raw, typed_return ))
     }
 
-    /// Writes to the forked EVM.
+    /// Writes to the forked EVM using alloy typed arguments.
     /// # Arguments
-    /// * `executor` - An optional instance of `Executor`.
     /// * `from_address` - The address to call from.
     /// * `to_address` - The address to call to.
     /// * `call` - The call to make.
@@ -228,14 +223,7 @@ impl Forker {
         to_address: Address,
         call: T,
         value: U256,
-    ) -> Result<ForkTypedReturn<T>, ForkCallError> {
-        // let mut binding = self.build_executor();
-
-        // let executor = match executor {
-        //     Some(executor) => executor,
-        //     None => &mut binding,
-        // };
-
+    ) -> Result<(RawCallResult, T::Return), ForkCallError> {
         let raw = self
             .executor
             .call_raw_committing(
@@ -243,13 +231,119 @@ impl Forker {
                 to_address.0 .0.into(),
                 Bytes::from(call.abi_encode()),
                 value,
-            )
-            .map_err(|_e| ForkCallError::ExecutorError)?;
+            )?;
 
         let typed_return =
             T::abi_decode_returns(raw.result.to_vec().as_slice(), true).map_err(|e| {
                 ForkCallError::TypedError(format!("Call:{:?} Error:{:?}", type_name::<T>(), e))
             })?;
-        Ok(ForkTypedReturn { raw, typed_return })
+        Ok(( raw, typed_return ))
+    }
+}
+
+
+#[derive(Debug)]
+pub enum ForkCallError {
+    ExecutorError(eyre::Report),
+    TypedError(String),
+}
+
+impl std::fmt::Display for ForkCallError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ExecutorError(v) => write!(f, "{}", v),
+            Self::TypedError(v) => write!(f, "{}", v),
+        }
+    }
+}
+impl Error for ForkCallError {}
+impl From<eyre::Report> for ForkCallError {
+    fn from(value: eyre::Report) -> Self {
+        Self::ExecutorError(value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::namespace::CreateNamespace;
+    use super::*;
+    use alloy_primitives::U256;
+    use rain_interpreter_bindings::{
+        DeployerISP::iParserCall,
+        IInterpreterStoreV1::{getCall, setCall},
+    };
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_forked_evm_read() {
+        let fork_url = "https://rpc.ankr.com/polygon_mumbai";
+        let fork_block_number: BlockNumber = 45658085;
+        let forked_evm = ForkedEvm::new(NewForkedEvm {
+            fork_url: fork_url.into(),
+            fork_block_number: Some(fork_block_number),
+        })
+        .await;
+
+        let from_address = Address::default();
+        let to_address: Address = "0x0754030e91F316B2d0b992fe7867291E18200A77"
+            .parse::<Address>()
+            .unwrap();
+        let call = iParserCall {};
+        let result = forked_evm
+            .read(None, from_address, to_address, call)
+            .unwrap();
+        let parser_address = result.typed_return._0;
+        let expected_address = "0x4f8024FB052DbE76b156C6C262Ad27e0F436AF98"
+            .parse::<Address>()
+            .unwrap();
+        assert_eq!(parser_address, expected_address);
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+    async fn test_forked_evm_write() {
+        let fork_url = "https://rpc.ankr.com/polygon_mumbai";
+        let fork_block_number: BlockNumber = 45658085;
+        let forked_evm = ForkedEvm::new(NewForkedEvm {
+            fork_url: fork_url.into(),
+            fork_block_number: Some(fork_block_number),
+        })
+        .await;
+        let mut executor = forked_evm.build_executor();
+        let from_address = Address::repeat_byte(0x02);
+        let to_address: Address = "0xF34e1f2BCeC2baD9c7bE8Aec359691839B784861"
+            .parse::<Address>()
+            .unwrap();
+        let namespace = U256::from(1);
+        let key = U256::from(3);
+        let value = U256::from(4);
+        let _set = forked_evm
+            .write(
+                Some(&mut executor),
+                from_address,
+                to_address,
+                setCall {
+                    namespace,
+                    kvs: vec![key, value],
+                },
+                U256::from(0),
+            )
+            .unwrap();
+
+        let fully_quallified_namespace =
+            CreateNamespace::qualify_namespace(namespace.into(), from_address);
+
+        let get = forked_evm
+            .read(
+                Some(&mut executor),
+                from_address,
+                to_address,
+                getCall {
+                    namespace: fully_quallified_namespace.into(),
+                    key: U256::from(3),
+                },
+            )
+            .unwrap()
+            .typed_return
+            ._0;
+        assert_eq!(value, get);
     }
 }

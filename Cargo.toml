@@ -14,6 +14,9 @@ crate-type = ["rlib"]
 
 [dependencies]
 eyre = "0.6"
+foundry-compilers = "=0.2.2"
+alloy-primitives = "0.5.4"
+alloy-sol-types = { version = "0.5.4", features = ["json"] }
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107", default-features = false }
 foundry-evm = { git = "https://github.com/foundry-rs/foundry", rev = "deb3116955eea4333f9e4e4516104be4182e9ee2" }
 revm = { version = "3", default-features = false, features = [
@@ -25,9 +28,9 @@ revm = { version = "3", default-features = false, features = [
     "optional_no_base_fee",
     "arbitrary",
 ] }
-foundry-compilers = "=0.2.2"
-alloy-sol-types = { version = "0.5.4", features = ["json"] }
-alloy-primitives = "0.5.4"
+
+[dev-dependencies]
+tokio = { version = "1.34.0", features = ["full"] }
 
 [patch.crates-io]
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107" }
