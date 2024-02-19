@@ -16,6 +16,9 @@ use std::{any::type_name, collections::HashMap, error::Error};
 pub use foundry_evm;
 pub use revm;
 
+/// Forker is thin wrapper around foundry that provides easy to use
+/// functionalities to read/write on evm forks, with ability to manage
+/// multiple forks and switch between them
 pub struct Forker {
     pub executor: Executor,
     forks: HashMap<ForkId, LocalForkId>,
