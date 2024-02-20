@@ -191,7 +191,7 @@ impl Forker {
         from_address: Address,
         to_address: Address,
         call: T,
-    ) -> Result<(RawCallResult, T::Return), ForkCallError> {
+    ) -> Result<ForkTypedReturn<T>, ForkCallError> {
         let mut env = Env::default();
         env.tx.caller = from_address.0 .0.into();
         env.tx.data = Bytes::from(call.abi_encode());
@@ -208,7 +208,7 @@ impl Forker {
                     raw
                 ))
             })?;
-        Ok((raw, typed_return))
+        Ok(ForkTypedReturn { raw, typed_return })
     }
 
     /// Writes to the forked EVM using alloy typed arguments.
@@ -225,7 +225,7 @@ impl Forker {
         to_address: Address,
         call: T,
         value: U256,
-    ) -> Result<(RawCallResult, T::Return), ForkCallError> {
+    ) -> Result<ForkTypedReturn<T>, ForkCallError> {
         let raw = self.executor.call_raw_committing(
             from_address.0 .0.into(),
             to_address.0 .0.into(),
@@ -237,8 +237,13 @@ impl Forker {
             T::abi_decode_returns(raw.result.to_vec().as_slice(), true).map_err(|e| {
                 ForkCallError::TypedError(format!("Call:{:?} Error:{:?}", type_name::<T>(), e))
             })?;
-        Ok((raw, typed_return))
+        Ok(ForkTypedReturn { raw, typed_return })
     }
+}
+
+pub struct ForkTypedReturn<T: SolCall> {
+    pub raw: RawCallResult,
+    pub typed_return: T::Return,
 }
 
 #[derive(Debug)]
@@ -296,7 +301,7 @@ mod tests {
             account: POLYGON_ACC.parse::<Address>().unwrap(),
         };
         let result = forker.alloy_read(from_address, to_address, call).unwrap();
-        let balance = result.1._0;
+        let balance = result.typed_return._0;
         let expected_balance = U256::from(0x1087cc8e759f4u64);
         assert_eq!(balance, expected_balance);
     }
@@ -311,7 +316,7 @@ mod tests {
             account: POLYGON_ACC.parse::<Address>().unwrap(),
         };
         let result = forker.alloy_read(from_address, to_address, call).unwrap();
-        let old_balance = result.1._0;
+        let old_balance = result.typed_return._0;
 
         let from_address = POLYGON_ACC.parse::<Address>().unwrap();
         let to_address: Address = USDT_POLYGON.parse::<Address>().unwrap();
@@ -330,7 +335,7 @@ mod tests {
             account: POLYGON_ACC.parse::<Address>().unwrap(),
         };
         let result = forker.alloy_read(from_address, to_address, call).unwrap();
-        let new_balance = result.1._0;
+        let new_balance = result.typed_return._0;
 
         assert_eq!(new_balance, old_balance - send_amount);
     }
@@ -345,7 +350,7 @@ mod tests {
             account: POLYGON_ACC.parse::<Address>().unwrap(),
         };
         let result = forker.alloy_read(from_address, to_address, call).unwrap();
-        let old_balance = result.1._0;
+        let old_balance = result.typed_return._0;
 
         let from_address = POLYGON_ACC.parse::<Address>().unwrap();
         let to_address: Address = USDT_POLYGON.parse::<Address>().unwrap();
@@ -364,7 +369,7 @@ mod tests {
             account: POLYGON_ACC.parse::<Address>().unwrap(),
         };
         let result = forker.alloy_read(from_address, to_address, call).unwrap();
-        let new_balance = result.1._0;
+        let new_balance = result.typed_return._0;
         assert_eq!(new_balance, old_balance - send_amount);
         let polygon_balance = new_balance;
 
@@ -379,7 +384,7 @@ mod tests {
             account: BSC_ACC.parse::<Address>().unwrap(),
         };
         let result = forker.alloy_read(from_address, to_address, call).unwrap();
-        let old_balance = result.1._0;
+        let old_balance = result.typed_return._0;
 
         let from_address = BSC_ACC.parse::<Address>().unwrap();
         let to_address: Address = USDT_BSC.parse::<Address>().unwrap();
@@ -398,7 +403,7 @@ mod tests {
             account: BSC_ACC.parse::<Address>().unwrap(),
         };
         let result = forker.alloy_read(from_address, to_address, call).unwrap();
-        let new_balance = result.1._0;
+        let new_balance = result.typed_return._0;
         assert_eq!(new_balance, old_balance - send_amount);
 
         // switch fork
@@ -412,7 +417,7 @@ mod tests {
             account: POLYGON_ACC.parse::<Address>().unwrap(),
         };
         let result = forker.alloy_read(from_address, to_address, call).unwrap();
-        let balance = result.1._0;
+        let balance = result.typed_return._0;
         assert_eq!(balance, polygon_balance);
 
         Ok(())
