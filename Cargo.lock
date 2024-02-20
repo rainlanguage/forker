@@ -1994,6 +1994,7 @@ dependencies = [
  "alloy-sol-types 0.5.4",
  "ethers",
  "eyre",
+ "foundry-block-explorers",
  "foundry-compilers",
  "foundry-evm",
  "revm",

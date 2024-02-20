@@ -15,6 +15,7 @@ crate-type = ["rlib"]
 [dependencies]
 eyre = "0.6"
 foundry-compilers = "=0.2.2"
+foundry-block-explorers = "=0.2.2"
 alloy-primitives = "0.5.4"
 alloy-sol-types = { version = "0.5.4", features = ["json"] }
 ethers = { git = "https://github.com/gakonst/ethers-rs", rev = "f0e5b194f09c533feb10d1a686ddb9e5946ec107", default-features = false }
